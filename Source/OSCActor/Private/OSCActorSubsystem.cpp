@@ -15,9 +15,9 @@ void UOSCActorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 
 	const UOSCActorSettings* Settings = GetDefault <UOSCActorSettings>();
-
+	
 	OSCServer = NewObject<UOSCServer>(this, FName("OSCActorServer"));
-	OSCServer->SetAddress(FString("0.0.0.0"), Settings->OSCReceivePort);
+	OSCServer->SetAddress(Settings->OSCAddress, Settings->OSCReceivePort);
 	OSCServer->SetTickInEditor(true);
 	OSCServer->Listen();
 	
