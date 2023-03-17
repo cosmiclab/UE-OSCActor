@@ -28,7 +28,8 @@ public class OSCActor : ModuleRules
 				"Core",
 				// ... add other public dependencies that you statically link with here ...
 				"OSC",
-				"CinematicCamera"
+				"CinematicCamera",
+				"Settings"
 			}
 			);
 			

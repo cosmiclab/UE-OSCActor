@@ -1,6 +1,8 @@
 ﻿#include "OSCActorSubsystem.h"
 
+#if WITH_EDITOR
 #include "Editor.h"
+#endif
 #include "OSCActor.h"
 #include "OSCActorModule.h"
 #include "OSCCineCameraActor.h"
@@ -18,7 +20,9 @@ void UOSCActorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	
 	OSCServer = NewObject<UOSCServer>(this, FName("OSCActorServer"));
 	OSCServer->SetAddress(Settings->OSCAddress, Settings->OSCReceivePort);
+#if WITH_EDITOR
 	OSCServer->SetTickInEditor(true);
+#endif
 	OSCServer->Listen();
 	
 	OSCServer->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
