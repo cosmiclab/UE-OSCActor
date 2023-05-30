@@ -164,19 +164,24 @@ void AOSCActor::UpdateInstancedStaticMesh(UInstancedStaticMeshComponent* Instanc
 
 		if (hasDirection)
 		{
-			FQuat RR = FQuat::FindBetweenNormals(FVector(0, 0, 1), FVector(
-				getSample(vx, i, 0),
-				getSample(vy, i, 0),
-				getSample(vz, i, 0))
+			FQuat RR = FQuat::FindBetweenNormals(
+				FVector(0, 0, -1),
+				FVector(
+					getSample(vx, i, 0),
+					getSample(vy, i, 0),
+					getSample(vz, i, 0)
+				).GetUnsafeNormal()
 			);
 			T *= FRotationMatrix::Make(RR);
 		}
-		
-		T *= FRotationMatrix::Make(FRotator(
-			-getSample(ry, i),
-			getSample(rz, i),
-			-getSample(rx, i)
-		));
+		else
+		{
+			T *= FRotationMatrix::Make(FRotator(
+				-getSample(ry, i),
+				getSample(rz, i),
+				-getSample(rx, i)
+			));
+		}
 
 		T *= FTranslationMatrix::Make(FVector(
 			getSample(tx, i),
