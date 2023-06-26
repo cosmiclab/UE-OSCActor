@@ -18,6 +18,9 @@ class UOSCActorSettings : public UObject
 public:
 	
 	UPROPERTY(EditAnywhere, config, Category = OSCActor)
+	FString OSCAddress = "0.0.0.0";
+
+	UPROPERTY(EditAnywhere, config, Category = OSCActor)
 	int OSCReceivePort = 7000;
 
 	UPROPERTY(EditAnywhere, config, Category = OSCActor)

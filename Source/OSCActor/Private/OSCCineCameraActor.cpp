@@ -39,7 +39,7 @@ void UOSCCineCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 	UOSCActorSubsystem* S = GEngine->GetEngineSubsystem<UOSCActorSubsystem>();
 	if (S)
-		S->UpdateActorReference(this);
+	S->UpdateActorReference(this);
 }
 
 // ===================================================================================
