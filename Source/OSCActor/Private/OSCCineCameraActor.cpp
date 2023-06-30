@@ -5,12 +5,49 @@
 
 #include "OSCActorSubsystem.h"
 
-void AOSCCineCameraActor::Tick(float DeltaSeconds)
+void UOSCCineCameraComponent::GetCameraView(float DeltaTime, FMinimalViewInfo& DesiredView)
 {
-	Super::Tick(DeltaSeconds);
+	Super::GetCameraView(DeltaTime, DesiredView);
+
+	DesiredView.OffCenterProjectionOffset.X = WindowXY.X;
+	DesiredView.OffCenterProjectionOffset.Y = WindowXY.Y;
+}
+
+// ===================================================================================
+
+UOSCCineCameraComponent::UOSCCineCameraComponent()
+{
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = true;
+	PrimaryComponentTick.TickGroup = ETickingGroup::TG_PrePhysics;
+	bTickInEditor = true;
+}
+
+void UOSCCineCameraComponent::BeginDestroy()
+{
+	UOSCActorSubsystem* S = GEngine->GetEngineSubsystem<UOSCActorSubsystem>();
+	if (S)
+		S->RemoveActorReference(this);
+
+	Super::BeginDestroy();
+}
+
+void UOSCCineCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	UOSCActorSubsystem* S = GEngine->GetEngineSubsystem<UOSCActorSubsystem>();
+	if (S)
 	S->UpdateActorReference(this);
+}
+
+// ===================================================================================
+
+AOSCCineCameraActor::AOSCCineCameraActor(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UOSCCineCameraComponent>(TEXT("CameraComponent")))
+{
+	OSCCineCameraComponent = Cast<UOSCCineCameraComponent>(GetCineCameraComponent());
 }
 
 void AOSCCineCameraActor::CopyCameraSettingToSceneCaptureComponent2D(USceneCaptureComponent2D* SceneCaptureComponent)
