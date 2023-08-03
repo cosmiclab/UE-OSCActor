@@ -16,7 +16,7 @@
 		{
 			"Name": "OSCActor",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PostDefault"
 		}
 	],
 	"Plugins": [

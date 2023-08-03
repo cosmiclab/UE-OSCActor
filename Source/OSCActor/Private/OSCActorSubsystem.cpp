@@ -16,26 +16,89 @@ void UOSCActorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	const UOSCActorSettings* Settings = GetDefault <UOSCActorSettings>();
-	
-	OSCServer = NewObject<UOSCServer>(this, FName("OSCActorServer"));
-	OSCServer->SetAddress(Settings->OSCAddress, Settings->OSCReceivePort);
-#if WITH_EDITOR
-	OSCServer->SetTickInEditor(true);
-#endif
-	OSCServer->Listen();
-	
-	OSCServer->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+	UOSCActorSettings* Settings = GetMutableDefault<UOSCActorSettings>();
+	auto Names = Settings->GetServerNames();
+	OSCServer = nullptr;
+
+	for (int i = 0; i < Names.Num(); ++i)
+	{
+		if (Names[i].Equals(Settings->OSCServerName))
+		{
+			ServerId = i;
+		}
+	}
+
+	if (Names.Num() > 0)
+	{
+		Settings->OSCServerName = Names[ServerId];
+		Settings->SaveConfig();
+
+		UOscManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOscManagerSubsystem>();
+		OSCServer = OscManager->GetServer(ServerId);
+	}
+
+	if (OSCServer)
+	{
+		OSCServer->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Error: No OSC Server is Active. Please setup at least one OSC Server and Restart"));
+	}
+
+	bInitialized = true;
 }
 
 void UOSCActorSubsystem::Deinitialize()
 {
-	OSCServer->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+	UOscManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOscManagerSubsystem>();
+	
+	if (OSCServer)
+	{
+		OSCServer->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+	}
 
-	OSCServer->Stop();
-	OSCServer->ConditionalBeginDestroy();
-
+	bInitialized = false;
 	Super::Deinitialize();
+}
+
+///------------------------------------------
+///  Tickable Implementation
+///------------------------------------------
+TStatId UOSCActorSubsystem::GetStatId() const { return TStatId(); }
+
+bool UOSCActorSubsystem::IsTickable() const { return true; }
+bool UOSCActorSubsystem::IsTickableInEditor() const { return true; }
+bool UOSCActorSubsystem::IsTickableWhenPaused() const { return true; }
+
+void UOSCActorSubsystem::Tick(float DeltaTime)
+{
+	if (!bInitialized) { return; }
+
+	const UOSCActorSettings* Settings = GetDefault<UOSCActorSettings>();
+	UOscManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOscManagerSubsystem>();
+	
+	if (!OscManager->GetServerInfo(ServerId).ToString().Equals(Settings->OSCServerName))
+	{
+		auto Names = Settings->GetServerNames();
+
+		for (int i = 0; i < Names.Num(); ++i)
+		{
+			if (Names[i].Equals(Settings->OSCServerName))
+			{
+				OSCServer->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+				OSCServer = OscManager->GetServer(i);
+				ServerId = i;
+
+				if (OSCServer)
+				{
+					OSCServer->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+				}
+
+				UE_LOG(LogTemp, Warning, TEXT("Changing OSC Actor Server: %s"), *Settings->OSCServerName);
+			}
+		}
+	}
 }
 
 void UOSCActorSubsystem::UpdateActorReference(UActorComponent* Component_)

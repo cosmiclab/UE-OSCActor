@@ -8,6 +8,7 @@
 #include "OSCServer.h"
 #include "OSCBundle.h"
 #include "OSCCineCameraActor.h"
+#include "OscManagerSubsystem.h"
 #include "OSCActorSubsystem.generated.h"
 
 UCLASS(config=Project, defaultconfig)
@@ -16,19 +17,31 @@ class UOSCActorSettings : public UObject
 	GENERATED_UCLASS_BODY()
 
 public:
-	
-	UPROPERTY(EditAnywhere, config, Category = OSCActor)
-	FString OSCAddress = "0.0.0.0";
-
-	UPROPERTY(EditAnywhere, config, Category = OSCActor)
-	int OSCReceivePort = 7000;
+	UPROPERTY(EditAnywhere, config, Category = OSCActor, meta = (GetOptions = "GetServerNames"))
+	FString OSCServerName;
 
 	UPROPERTY(EditAnywhere, config, Category = OSCActor)
 	float SensorAspectRatio = 16.0 / 9.0;
+
+	UFUNCTION()
+	TArray<FString> GetServerNames() const
+	{
+		UOscManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOscManagerSubsystem>();
+		int32 ServerCount = OscManager->GetServerCount();
+		TArray<FString> ServerNames;
+
+		for (int ServerId = 0; ServerId < ServerCount; ++ServerId)
+		{
+			auto ServerInfo = OscManager->GetServerInfo(ServerId);
+			ServerNames.Add(ServerInfo.ToString());
+		}
+
+		return ServerNames;
+	}
 };
 
 UCLASS()
-class OSCACTOR_API UOSCActorSubsystem : public UEngineSubsystem
+class OSCACTOR_API UOSCActorSubsystem : public UEngineSubsystem, public FTickableGameObject
 {
 	GENERATED_BODY()
 
@@ -36,6 +49,14 @@ public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
+
+	// Tickable impelmentation
+	virtual TStatId GetStatId() const override;
+
+	virtual bool IsTickable() const override;
+	virtual bool IsTickableInEditor() const override;
+	virtual bool IsTickableWhenPaused() const override;
+	virtual void Tick(float DeltaTime) override;
 
 public:
 
@@ -46,12 +67,11 @@ public:
 	void RemoveActorReference(UActorComponent* Component_);
 
 protected:
-
+	bool bInitialized = false;
+	int32 ServerId = 0;
+	UOSCServer* OSCServer;
 	TMap<FString, UOSCActorComponent*> OSCActorComponentMap;
 	TMap<FString, UOSCCineCameraComponent*> OSCCameraComponentMap;
-
-	UPROPERTY()
-	class UOSCServer* OSCServer;
 
 	UFUNCTION()
 	void OnOscBundleReceived(const FOSCBundle& Bundle, const FString& IPAddress, int32 Port);

@@ -75,9 +75,6 @@ protected:
 	
 	virtual bool ShouldTickIfViewportsOnly() const override { return true; }
 
-	// Deprecated: Should be use UOSCActorComponent::UpdateFromOSC
-	// UFUNCTION(CallInEditor, BlueprintCallable, BlueprintImplementableEvent, Category = "OSCActor")
-	// void UpdateFromOSC();
 
 public:
 

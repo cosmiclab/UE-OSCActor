@@ -9,8 +9,6 @@ static float getSample(const TArray<float>& c, int index, float default_value = 
 	return c[index];
 }
 
-// ===================================================================================
-
 UOSCActorComponent::UOSCActorComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -62,7 +60,7 @@ const TArray<float>& UOSCActorComponent::GetOSCMultiSampleParam(const FString& K
 void UOSCActorComponent::UpdateInstancedStaticMesh(UInstancedStaticMeshComponent* InstancedStaticMesh,
 	TArray<FString> InCustomDataChannels)
 {
-TArray<FInstancedStaticMeshInstanceData> InstanceData;
+	TArray<FInstancedStaticMeshInstanceData> InstanceData;
 
 	const TArray<float>& tx = GetOSCMultiSampleParam("tx");
 	const TArray<float>& ty = GetOSCMultiSampleParam("ty");
@@ -212,8 +210,6 @@ TArray<FInstancedStaticMeshInstanceData> InstanceData;
 
 	InstancedStaticMesh->BatchUpdateInstancesData(0, MultiSampleNum, InstanceData.GetData(), true);
 }
-
-// ===================================================================================
 
 AOSCActor::AOSCActor(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

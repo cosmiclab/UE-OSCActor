@@ -13,8 +13,6 @@ void UOSCCineCameraComponent::GetCameraView(float DeltaTime, FMinimalViewInfo& D
 	DesiredView.OffCenterProjectionOffset.Y = WindowXY.Y;
 }
 
-// ===================================================================================
-
 UOSCCineCameraComponent::UOSCCineCameraComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -39,10 +37,8 @@ void UOSCCineCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 	UOSCActorSubsystem* S = GEngine->GetEngineSubsystem<UOSCActorSubsystem>();
 	if (S)
-	S->UpdateActorReference(this);
+		S->UpdateActorReference(this);
 }
-
-// ===================================================================================
 
 AOSCCineCameraActor::AOSCCineCameraActor(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UOSCCineCameraComponent>(TEXT("CameraComponent")))
