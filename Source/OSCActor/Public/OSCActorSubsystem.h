@@ -8,7 +8,7 @@
 #include "OSCServer.h"
 #include "OSCBundle.h"
 #include "OSCCineCameraActor.h"
-#include "OscManagerSubsystem.h"
+#include "OSCManagerSubsystem.h"
 #include "OSCActorSubsystem.generated.h"
 
 UCLASS(config=Project, defaultconfig)
@@ -26,7 +26,7 @@ public:
 	UFUNCTION()
 	TArray<FString> GetServerNames() const
 	{
-		UOscManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOscManagerSubsystem>();
+		UOSCManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOSCManagerSubsystem>();
 		int32 ServerCount = OscManager->GetServerCount();
 		TArray<FString> ServerNames;
 
@@ -69,7 +69,7 @@ public:
 protected:
 	bool bInitialized = false;
 	int32 ServerId = 0;
-	UOSCServer* OSCServer;
+	UOSCServer* OscServer;
 	TMap<FString, UOSCActorComponent*> OSCActorComponentMap;
 	TMap<FString, UOSCCineCameraComponent*> OSCCameraComponentMap;
 

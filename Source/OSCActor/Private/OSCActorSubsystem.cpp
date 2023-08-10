@@ -18,7 +18,7 @@ void UOSCActorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	UOSCActorSettings* Settings = GetMutableDefault<UOSCActorSettings>();
 	auto Names = Settings->GetServerNames();
-	OSCServer = nullptr;
+	OscServer = nullptr;
 
 	for (int i = 0; i < Names.Num(); ++i)
 	{
@@ -33,13 +33,13 @@ void UOSCActorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		Settings->OSCServerName = Names[ServerId];
 		Settings->SaveConfig();
 
-		UOscManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOscManagerSubsystem>();
-		OSCServer = OscManager->GetServer(ServerId);
+		UOSCManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOSCManagerSubsystem>();
+		OscServer = OscManager->GetServer(ServerId);
 	}
 
-	if (OSCServer)
+	if (OscServer)
 	{
-		OSCServer->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+		OscServer->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
 	}
 	else
 	{
@@ -51,11 +51,11 @@ void UOSCActorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UOSCActorSubsystem::Deinitialize()
 {
-	UOscManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOscManagerSubsystem>();
+	UOSCManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOSCManagerSubsystem>();
 	
-	if (OSCServer)
+	if (OscServer)
 	{
-		OSCServer->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+		OscServer->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
 	}
 
 	bInitialized = false;
@@ -76,7 +76,7 @@ void UOSCActorSubsystem::Tick(float DeltaTime)
 	if (!bInitialized) { return; }
 
 	const UOSCActorSettings* Settings = GetDefault<UOSCActorSettings>();
-	UOscManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOscManagerSubsystem>();
+	UOSCManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOSCManagerSubsystem>();
 	
 	if (!OscManager->GetServerInfo(ServerId).ToString().Equals(Settings->OSCServerName))
 	{
@@ -86,13 +86,13 @@ void UOSCActorSubsystem::Tick(float DeltaTime)
 		{
 			if (Names[i].Equals(Settings->OSCServerName))
 			{
-				OSCServer->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
-				OSCServer = OscManager->GetServer(i);
+				OscServer->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+				OscServer = OscManager->GetServer(i);
 				ServerId = i;
 
-				if (OSCServer)
+				if (OscServer)
 				{
-					OSCServer->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+					OscServer->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
 				}
 
 				UE_LOG(LogTemp, Warning, TEXT("Changing OSC Actor Server: %s"), *Settings->OSCServerName);
