@@ -16,30 +16,46 @@ void UOSCActorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
+	UOSCManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOSCManagerSubsystem>();
 	UOSCActorSettings* Settings = GetMutableDefault<UOSCActorSettings>();
 	auto Names = Settings->GetServerNames();
-	OscServer = nullptr;
+	
+	OscServers.Empty();
+	ServerIds.Empty();
 
-	for (int i = 0; i < Names.Num(); ++i)
+	OscServers.SetNum(Settings->OSCServerNames.Num());
+	ServerIds.SetNum(Settings->OSCServerNames.Num());
+
+	for (int32 ServerIndex = 0; ServerIndex < OscServers.Num(); ++ServerIndex)
 	{
-		if (Names[i].Equals(Settings->OSCServerName))
+		bool bFound = false;
+		FString ServerName = Settings->OSCServerNames[ServerIndex];
+				
+		for (int i = 0; i < Names.Num(); ++i)
 		{
-			ServerId = i;
+			if (ServerName.Equals(Names[i]))
+			{
+				OscServers[ServerIndex] = OscManager->GetServer(i);
+				ServerIds[ServerIndex] = i;
+				bFound = true;
+			}
+		}
+		
+		if (!bFound)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Error: Invalid Server Name: %s"), *ServerName);
 		}
 	}
 
-	if (Names.Num() > 0)
+	if (OscServers.Num() > 0)
 	{
-		Settings->OSCServerName = Names[ServerId];
-		Settings->SaveConfig();
-
-		UOSCManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOSCManagerSubsystem>();
-		OscServer = OscManager->GetServer(ServerId);
-	}
-
-	if (OscServer)
-	{
-		OscServer->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+		for (UOSCServer* OscServer : OscServers)
+		{
+			if (OscServer)
+			{
+				OscServer->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+			}
+		}
 	}
 	else
 	{
@@ -53,10 +69,16 @@ void UOSCActorSubsystem::Deinitialize()
 {
 	UOSCManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOSCManagerSubsystem>();
 	
-	if (OscServer)
+	for (UOSCServer* OscServer : OscServers)
 	{
-		OscServer->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+		if (OscServer)
+		{
+			OscServer->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+		}
 	}
+
+	OscServers.Empty();
+	ServerIds.Empty();
 
 	bInitialized = false;
 	Super::Deinitialize();
@@ -78,24 +100,30 @@ void UOSCActorSubsystem::Tick(float DeltaTime)
 	const UOSCActorSettings* Settings = GetDefault<UOSCActorSettings>();
 	UOSCManagerSubsystem* OscManager = GEngine->GetEngineSubsystem<UOSCManagerSubsystem>();
 	
-	if (!OscManager->GetServerInfo(ServerId).ToString().Equals(Settings->OSCServerName))
+	for (int32 ActorServerId = 0; ActorServerId < ServerIds.Num(); ActorServerId++)
 	{
-		auto Names = Settings->GetServerNames();
+		int32 ServerId = ServerIds[ActorServerId];
 
-		for (int i = 0; i < Names.Num(); ++i)
+		if (!OscManager->GetServerInfo(ServerId).ToString().Equals(Settings->OSCServerNames[ActorServerId]))
 		{
-			if (Names[i].Equals(Settings->OSCServerName))
+			UE_LOG(LogTemp, Warning, TEXT("Error: Server Name Missmatch [%s,%s]"), *OscManager->GetServerInfo(ServerId).ToString(), *Settings->OSCServerNames[ActorServerId]);
+			auto Names = Settings->GetServerNames();
+
+			for (int i = 0; i < Names.Num(); ++i)
 			{
-				OscServer->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
-				OscServer = OscManager->GetServer(i);
-				ServerId = i;
-
-				if (OscServer)
+				if (Names[i].Equals(Settings->OSCServerNames[ActorServerId]))
 				{
-					OscServer->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
-				}
+					OscServers[ActorServerId]->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+					OscServers[ActorServerId] = OscManager->GetServer(i);
+					ServerIds[ActorServerId] = i;
 
-				UE_LOG(LogTemp, Warning, TEXT("Changing OSC Actor Server: %s"), *Settings->OSCServerName);
+					if (OscServers[ActorServerId])
+					{
+						OscServers[ActorServerId]->OnOscBundleReceived.AddDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
+					}
+
+					UE_LOG(LogTemp, Warning, TEXT("Changing OSC Actor Server: %s"), *Settings->OSCServerNames[ActorServerId]);
+				}
 			}
 		}
 	}

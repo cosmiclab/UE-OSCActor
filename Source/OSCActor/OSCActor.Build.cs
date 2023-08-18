@@ -30,7 +30,7 @@ public class OSCActor : ModuleRules
 				"OSC",
 				"CinematicCamera",
 				"Settings",
-				"OscManager"
+				"OSCManager"
             }
 			);
 			

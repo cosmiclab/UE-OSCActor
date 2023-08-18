@@ -18,7 +18,7 @@ class UOSCActorSettings : public UObject
 
 public:
 	UPROPERTY(EditAnywhere, config, Category = OSCActor, meta = (GetOptions = "GetServerNames"))
-	FString OSCServerName;
+	TArray<FString> OSCServerNames;
 
 	UPROPERTY(EditAnywhere, config, Category = OSCActor)
 	float SensorAspectRatio = 16.0 / 9.0;
@@ -68,8 +68,8 @@ public:
 
 protected:
 	bool bInitialized = false;
-	int32 ServerId = 0;
-	UOSCServer* OscServer;
+	TArray<int32> ServerIds;
+	TArray<UOSCServer*> OscServers;
 	TMap<FString, UOSCActorComponent*> OSCActorComponentMap;
 	TMap<FString, UOSCCineCameraComponent*> OSCCameraComponentMap;
 
