@@ -201,7 +201,7 @@ void UOSCActorComponent::UpdateInstancedStaticMesh(UInstancedStaticMeshComponent
 		
 		InstanceData[i].Transform = ROT_YAW_90_T * UOSCActorFunctionLibrary::ConvertGLtoUE4Matrix(T) * ROT_YAW_90;
 
-		for (int n = 0; n < InstancedStaticMesh->NumCustomDataFloats; n++)
+		for (int n = 0; n < InstancedStaticMesh->NumCustomDataFloats && n < SrcCustomDataChannels.Num(); n++)
 		{
 			*CustomData = SrcCustomDataChannels[n][i];
 			CustomData++;
