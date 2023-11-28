@@ -72,20 +72,7 @@ void UOSCActorSubsystem::OnOscBundleReceived(const FOSCBundle& Bundle, const FSt
 
 	TArray<FString> Keys;
 	OSCActorComponentMap.GetKeys(Keys);
-	
-	for (auto Key : Keys)
-	{
-		auto A = *OSCActorComponentMap.Find(Key);
-		if (!IsValid(A))
-		{
-			OSCActorComponentMap.Remove(Key);
-			continue;
-		}
-
-		A->Params.Reset();
-		A->MultiSampleParams.Reset();
-	}
-	
+		
 	for (auto Message : Messages)
 	{
 		auto Address = Message.GetAddress().GetFullPath();
@@ -242,6 +229,20 @@ void UOSCActorSubsystem::OnOscBundleReceived(const FOSCBundle& Bundle, const FSt
 
 				if (Type == "frame_number")
 				{
+					// Clear actor cached data at start of frame.
+					for (auto Key : Keys)
+					{
+						auto A = *OSCActorComponentMap.Find(Key);
+						if (!IsValid(A))
+						{
+							OSCActorComponentMap.Remove(Key);
+							continue;
+						}
+
+						A->Params.Reset();
+						A->MultiSampleParams.Reset();
+					}
+
 					int Value;
 					UOSCManager::GetInt32(Message, 0, Value);
 					FrameNumber = Value;
