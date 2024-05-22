@@ -216,6 +216,7 @@ AOSCActor::AOSCActor(const FObjectInitializer& ObjectInitializer)
 	, OSCActorComponent(CreateDefaultSubobject<UOSCActorComponent>(TEXT("OSCActorComponent")))
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bLastHidden = IsHidden();
 }
 
 float AOSCActor::GetOSCParam(const FString& Key, float DefaultValue)

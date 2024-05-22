@@ -191,12 +191,22 @@ void UOSCActorSubsystem::OnOscBundleReceived(const FOSCBundle& Bundle, const FSt
 
 				if (Type == "active")
 				{
-					bool Value = false;
-					UOSCManager::GetBool(Message, 0, Value);
+					TArray<bool> Params;
+					UOSCManager::GetAllBools(Message, Params);
+					bool bVisible = Params[0];
+					bool bFade = Params.Num() == 1 ? false : Params[1];
 
-					Actor->SetActorHiddenInGame(!Value);
+					AOSCActor* OscActor = Cast<AOSCActor>(Actor);
+					if (IsValid(OscActor))
+					{
+						OscActor->SetHidden(!bVisible, bFade);
+					}
+					else
+					{
+						Actor->SetActorHiddenInGame(!bVisible);
+					}
 #if WITH_EDITOR
-					Actor->SetIsTemporarilyHiddenInEditor(!Value);
+					//Actor->SetIsTemporarilyHiddenInEditor(!bVisible);
 #endif
 				}
 				else if (Type == "TRS")

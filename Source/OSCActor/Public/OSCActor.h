@@ -67,6 +67,9 @@ class OSCACTOR_API AOSCActor : public AActor
 	
 	GENERATED_BODY()
 	
+private:
+	bool bLastHidden = false;
+
 public:	
 
 	AOSCActor(const FObjectInitializer& ObjectInitializer);
@@ -89,4 +92,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "OSCActor")
 	void UpdateInstancedStaticMesh(UInstancedStaticMeshComponent* InstancedStaticMesh, TArray<FString> InCustomDataChannels);
+
+	UFUNCTION()
+	void SetHidden(bool bNewHidden, bool bFade) { if (bLastHidden != bNewHidden) { bLastHidden = bNewHidden; HideActor(bNewHidden, bFade); } }
+
+	UFUNCTION(BlueprintNativeEvent, Category = "OSCActor")
+	void HideActor(bool bNewHidden, bool bFade);
+
+	void HideActor_Implementation(bool bNewHidden, bool bFade) { SetActorHiddenInGame(bNewHidden); }
 };
