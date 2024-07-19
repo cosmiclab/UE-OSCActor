@@ -33,7 +33,7 @@ void UOSCActorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 				
 		for (int i = 0; i < Names.Num(); ++i)
 		{
-			if (ServerName.Equals(Names[i]))
+			if (ServerName.StartsWith(Names[i]))
 			{
 				OscServers[ServerIndex] = OscManager->GetServer(i);
 				ServerIds[ServerIndex] = i;
@@ -104,14 +104,14 @@ void UOSCActorSubsystem::Tick(float DeltaTime)
 	{
 		int32 ServerId = ServerIds[ActorServerId];
 
-		if (!OscManager->GetServerInfo(ServerId).ToString().Equals(Settings->OSCServerNames[ActorServerId]))
+		if (!OscManager->GetServerInfo(ServerId).ToString().StartsWith(Settings->OSCServerNames[ActorServerId]))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Error: Server Name Missmatch [%s,%s]"), *OscManager->GetServerInfo(ServerId).ToString(), *Settings->OSCServerNames[ActorServerId]);
 			auto Names = Settings->GetServerNames();
 
 			for (int i = 0; i < Names.Num(); ++i)
 			{
-				if (Names[i].Equals(Settings->OSCServerNames[ActorServerId]))
+				if (Names[i].StartsWith(Settings->OSCServerNames[ActorServerId]))
 				{
 					OscServers[ActorServerId]->OnOscBundleReceived.RemoveDynamic(this, &UOSCActorSubsystem::OnOscBundleReceived);
 					OscServers[ActorServerId] = OscManager->GetServer(i);
